@@ -25,12 +25,3 @@
             </repositories>
         </profile>
     </profiles>
-
-    <servers>
-        <server>
-            <id>github</id>
-            <username>${env.GITHUB_ACTOR}</username> <!-- This uses the GitHub actor, which is the user triggering the action -->
-            <password>${env.GITHUB_TOKEN}</password> <!-- This will pull the GitHub token -->
-        </server>
-    </servers>
-</settings>
