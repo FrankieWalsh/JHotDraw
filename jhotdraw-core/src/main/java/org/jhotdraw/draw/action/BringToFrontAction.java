@@ -29,25 +29,42 @@ public class BringToFrontAction extends AbstractSelectedAction {
      */
     public BringToFrontAction(DrawingEditor editor) {
         super(editor);
-        ResourceBundleUtil labels
-                = ResourceBundleUtil.getBundle("org.jhotdraw.draw.Labels");
-        labels.configureAction(this, ID);
+        configureAction();
         updateEnabledState();
+    }
+
+    /**
+     * Configures the action using ResourceBundleUtil.
+     */
+    private void configureAction() {
+        ResourceBundleUtil labels = ResourceBundleUtil.getBundle("org.jhotdraw.draw.Labels");
+        labels.configureAction(this, ID);
     }
 
     @Override
     public void actionPerformed(java.awt.event.ActionEvent e) {
         final DrawingView view = getView();
-        final LinkedList<Figure> figures = new LinkedList<>(view.getSelectedFigures());
+        if (view != null) {
+            final List<Figure> figures = new LinkedList<>(view.getSelectedFigures());
+            executeBringToFront(view, figures); // Refactored logic
+        }
+    }
+
+    /**
+     * Handles the bring-to-front operation and undoable edit.
+     */
+    private void executeBringToFront(DrawingView view, List<Figure> figures) {
         bringToFront(view, figures);
-        fireUndoableEditHappened(new AbstractUndoableEdit() {
+        fireUndoableEditHappened(createUndoableEdit(view, figures));
+    }
+
+    private UndoableEdit createUndoableEdit(DrawingView view, List<Figure> figures) {
+        return new AbstractUndoableEdit() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public String getPresentationName() {
-                ResourceBundleUtil labels
-                        = ResourceBundleUtil.getBundle("org.jhotdraw.draw.Labels");
-                return labels.getTextProperty(ID);
+                return getActionName();
             }
 
             @Override
@@ -61,13 +78,23 @@ public class BringToFrontAction extends AbstractSelectedAction {
                 super.undo();
                 SendToBackAction.sendToBack(view, figures);
             }
-        });
+        };
+    }
+
+    /**
+     * Retrieves the action's name from the resource bundle.
+     */
+    private String getActionName() {
+        ResourceBundleUtil labels = ResourceBundleUtil.getBundle("org.jhotdraw.draw.Labels");
+        return labels.getTextProperty(ID);
     }
 
     public static void bringToFront(DrawingView view, Collection<Figure> figures) {
         Drawing drawing = view.getDrawing();
-        for (Figure figure : drawing.sort(figures)) {
-            drawing.bringToFront(figure);
+        if (drawing != null) {
+            figures.stream()
+                    .sorted(Comparator.comparingInt(drawing::indexOf))
+                    .forEach(drawing::bringToFront);
         }
     }
 }
