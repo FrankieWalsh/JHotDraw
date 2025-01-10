@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+
 import javax.swing.undo.UndoableEdit;
 import java.util.*;
 
@@ -118,6 +119,80 @@ class BringToFrontActionTest {
         action.actionPerformed(null);
 
         verify(drawing, never()).bringToFront(any(Figure.class));
+    }
+    // BDD Tests
+    @Test
+    void givenSelectedFigures_WhenBringToFrontActionIsPerformed_ThenFiguresAreReordered() {
+        // GIVEN
+        Set<Figure> selectedFigures = view.getSelectedFigures();
+        assertNotNull(selectedFigures, "Selected figures should not be null");
+        assertTrue(selectedFigures.contains(figure1), "Selected figures should contain figure1");
+        assertTrue(selectedFigures.contains(figure2), "Selected figures should contain figure2");
+        assertTrue(selectedFigures.contains(figure3), "Selected figures should contain figure3");
+
+        // WHEN
+        action.actionPerformed(null);
+
+        // THEN
+        verify(drawing).bringToFront(figure3);
+        verify(drawing).bringToFront(figure2);
+        verify(drawing).bringToFront(figure1);
+    }
+
+    @Test
+    void givenNoSelectedFigures_WhenBringToFrontActionIsPerformed_ThenNoChangesOccur() {
+        // GIVEN
+        when(view.getSelectedFigures()).thenReturn(Collections.emptySet());
+
+        // WHEN
+        action.actionPerformed(null);
+
+        // THEN
+        verify(drawing, never()).bringToFront(any(Figure.class));
+        Set<Figure> selectedFigures = view.getSelectedFigures();
+        assertTrue(selectedFigures.isEmpty(), "Selected figures should be empty");
+    }
+
+    @Test
+    void givenUndoableEdit_WhenUndoIsPerformed_ThenFiguresAreSentToBack() {
+        // GIVEN
+        ArgumentCaptor<UndoableEdit> editCaptor = ArgumentCaptor.forClass(UndoableEdit.class);
+
+        action.actionPerformed(null);
+
+        verify(drawing).fireUndoableEditHappened(editCaptor.capture());
+        UndoableEdit edit = editCaptor.getValue();
+        assertNotNull(edit, "UndoableEdit should not be null");
+
+        // WHEN
+        edit.undo();
+
+        // THEN
+        verify(drawing, atLeastOnce()).sendToBack(figure1);
+        verify(drawing, atLeastOnce()).sendToBack(figure2);
+        verify(drawing, atLeastOnce()).sendToBack(figure3);
+    }
+
+    @Test
+    void givenUndoableEdit_WhenRedoIsPerformed_ThenFiguresAreBroughtToFront() {
+        // GIVEN
+        ArgumentCaptor<UndoableEdit> editCaptor = ArgumentCaptor.forClass(UndoableEdit.class);
+
+        action.actionPerformed(null);
+
+        verify(drawing).fireUndoableEditHappened(editCaptor.capture());
+        UndoableEdit edit = editCaptor.getValue();
+        assertNotNull(edit, "UndoableEdit should not be null");
+
+        edit.undo();
+
+        // WHEN
+        edit.redo();
+
+        // THEN
+        verify(drawing, atLeastOnce()).bringToFront(figure1);
+        verify(drawing, atLeastOnce()).bringToFront(figure2);
+        verify(drawing, atLeastOnce()).bringToFront(figure3);
     }
 }
 
