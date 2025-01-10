@@ -59,7 +59,7 @@ import org.jhotdraw.util.ResourceBundleUtil;
 public class TextCreationTool extends CreationTool implements ActionListener {
 
     private static final long serialVersionUID = 1L;
-    private FloatingTextField textField;
+    private transient FloatingTextField textField;
     private TextHolderFigure typingTarget;
 
     /**
@@ -108,7 +108,7 @@ public class TextCreationTool extends CreationTool implements ActionListener {
     }
 
     @Override
-    public void mouseDragged(java.awt.event.MouseEvent e) {
+    public void mouseDragged(java.awt.event.MouseEvent e) { // Intentional Blank Override
     }
 
     protected void beginEdit(TextHolderFigure textHolder) {
@@ -125,7 +125,7 @@ public class TextCreationTool extends CreationTool implements ActionListener {
     }
 
     @Override
-    public void mouseReleased(MouseEvent evt) {
+    public void mouseReleased(MouseEvent evt) {  // Intentional Blank Override
     }
 
     protected void endEdit() {
@@ -175,7 +175,6 @@ public class TextCreationTool extends CreationTool implements ActionListener {
             typingTarget = null;
             textField.endOverlay();
         }
-        //         view().checkDamage();
     }
 
     @Override
